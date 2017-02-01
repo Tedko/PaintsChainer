@@ -24,7 +24,7 @@ class Painter:
     def __init__(self, gpu=0):
 
         print("start")
-        self.root = "./static/images/"
+        self.root = "./images/"
         self.batchsize = 1
         self.outdir = self.root + "out/"
         self.outdir_min = self.root + "out_min/"
@@ -57,7 +57,7 @@ class Painter:
         array = array.transpose(1, 2, 0)
         array = array.clip(0, 255).astype(np.uint8)
         array = cuda.to_cpu(array)
-        img = cv2.cvtColor(array, cv2.COLOR_YUV2BGR)
+        img = cv2.cvtColor(array, cv2.COLOR_YUV2RGB)
         cv2.imwrite(name, img)
 
     def liner(self, id_str):
@@ -127,21 +127,21 @@ class Painter:
         input_bat[0, 0, :] = line2
 
         if self.gpu >= 0:
-            x = cuda.to_gpu(x)
+            x = cuda.to_gpu(x, cuda.Stream.null)
         y = self.cnn_128.calc(Variable(x, volatile='on'), test=True)
         del x  # release memory
 
         output = cuda.to_cpu(y.data[0])
         del y  # release memory
 
-        self.save_as_img(output, self.outdir_min + id_str + "_0.png")
+        # self.save_as_img(output, self.outdir_min + id_str + "_0.png")
 
         for ch in range(3):
             input_bat[0, 1 + ch, :] = cv2.resize(
                 output[ch, :], (line2.shape[2], line2.shape[1]), interpolation=cv2.INTER_CUBIC)
 
         if self.gpu >= 0:
-            x = cuda.to_gpu(input_bat)
+            x = cuda.to_gpu(input_bat, cuda.Stream.null)
         else:
             x = input_bat
         y = self.cnn.calc(Variable(x, volatile='on'), test=True)

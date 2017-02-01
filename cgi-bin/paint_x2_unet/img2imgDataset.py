@@ -7,7 +7,6 @@ import chainer.links as L
 import chainer.datasets.image_dataset as ImageDataset
 import six
 import os
-from PIL import Image
 
 from chainer import cuda, optimizers, serializers, Variable
 import cv2
@@ -30,7 +29,9 @@ class ImageAndRefDataset(chainer.dataset.DatasetMixin):
     def get_example(self, i, minimize=False, blur=0, s_size=128):
         path1 = os.path.join(self._root1, self._paths[i])
         #image1 = ImageDataset._read_image_as_array(path1, self._dtype)
+
         image1 = cv2.imread(path1, cv2.IMREAD_GRAYSCALE)
+        print("load:" + path1, os.path.isfile(path1), image1 is None)
         image1 = np.asarray(image1, self._dtype)
 
         _image1 = image1.copy()
@@ -73,7 +74,7 @@ class ImageAndRefDataset(chainer.dataset.DatasetMixin):
             image_ref = cv2.resize(image_ref, (image1.shape[1], image1.shape[
                                    0]), interpolation=cv2.INTER_NEAREST)
             b, g, r, a = cv2.split(image_ref)
-            image_ref = cv2.cvtColor(cv2.merge((b, g, r)), cv2.COLOR_BGR2YUV)
+            image_ref = cv2.cvtColor(cv2.merge((b, g, r)), cv2.COLOR_RGB2YUV)
 
             for x in range(image1.shape[0]):
                 for y in range(image1.shape[1]):
@@ -83,7 +84,7 @@ class ImageAndRefDataset(chainer.dataset.DatasetMixin):
 
         else:
             image_ref = cv2.imread(path_ref, cv2.IMREAD_COLOR)
-            image_ref = cv2.cvtColor(image_ref, cv2.COLOR_BGR2YUV)
+            image_ref = cv2.cvtColor(image_ref, cv2.COLOR_RGB2YUV)
             image1 = cv2.resize(
                 image1, (4 * image_ref.shape[1], 4 * image_ref.shape[0]), interpolation=cv2.INTER_AREA)
             image_ref = cv2.resize(image_ref, (image1.shape[1], image1.shape[
@@ -151,7 +152,7 @@ class Image2ImageDataset(chainer.dataset.DatasetMixin):
             image1 = cv2.imread(path1, cv2.IMREAD_GRAYSCALE)
             image2 = cv2.imread(path2, cv2.IMREAD_COLOR)
 
-        image2 = cv2.cvtColor(image2, cv2.COLOR_BGR2YUV)
+        image2 = cv2.cvtColor(image2, cv2.COLOR_RGB2YUV)
         name1 = os.path.basename(self._paths[i])
 
         if self._train and np.random.rand() < 0.2:
@@ -239,7 +240,7 @@ class Image2ImageDatasetX2(Image2ImageDataset):
         #image1 = ImageDataset._read_image_as_array(path1, self._dtype)
         image1 = cv2.imread(path1, cv2.IMREAD_GRAYSCALE)
         image2 = cv2.imread(path2, cv2.IMREAD_COLOR)
-        image2 = cv2.cvtColor(image2, cv2.COLOR_BGR2YUV)
+        image2 = cv2.cvtColor(image2, cv2.COLOR_RGB2YUV)
         image2 = np.asarray(image2, self._dtype)
         name1 = os.path.basename(self._paths[i])
         vec = self.get_vec(name1)
